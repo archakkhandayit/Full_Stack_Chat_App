@@ -3,6 +3,8 @@ import MessageContainer from "./MessageContainer";
 import UserSidebar from "./UserSidebar";
 import { useEffect } from "react";
 
+import { setNewMessage } from "../../store/slice/message/message.slice";
+
 import {
   initializeSocket,
   setOnlineUsers,
@@ -14,7 +16,6 @@ function Home() {
   const { isAuthenticated, userProfile } = useSelector(
     (state) => state.userReducer
   );
-  const { setNewMessage } = useSelector((state => state.messageReducer));
   const { socket } = useSelector((state) => state.socketReducer);
 
   useEffect(() => {
