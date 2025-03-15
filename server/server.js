@@ -9,7 +9,7 @@ connectDB1();
 const SERVER_PORT = process.env.SERVER_PORT || 3500;
 
 app.use(cors({
-    origin: [process.env.CLIENT_URL],
+    origin: process.env.CLIENT_URL,
     credentials: true,
 }));
 app.use(express.json());

@@ -12,9 +12,8 @@ export const socketSlice = createSlice({
   reducers: {
     initializeSocket: (state, action) => {
       const socket = io(import.meta.env.VITE_SERVER_SOCKET_URL, {
-        query: {
-          userId: action.payload,
-        },
+        query: { userId: action.payload },
+        withCredentials: true, // ✅ Important for CORS/auth
       });
       state.socket = socket;
     },
@@ -29,6 +28,7 @@ export const socketSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { initializeSocket, setOnlineUsers, clearSocketState } = socketSlice.actions;
+export const { initializeSocket, setOnlineUsers, clearSocketState } =
+  socketSlice.actions;
 
 export default socketSlice.reducer;

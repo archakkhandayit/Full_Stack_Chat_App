@@ -11,11 +11,16 @@ const userSocketMap = {
   // userId : socket.id
 };
 
+console.log("CORS allowed origin:", process.env.CLIENT_URL);
+
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL,
+    credentials: true, // ✅ Required for authentication (cookies, JWTs)
+    methods: ["GET", "POST"], // ✅ Explicitly allow necessary methods
   },
 });
+
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   if (!userId) return;
