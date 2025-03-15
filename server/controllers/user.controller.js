@@ -21,6 +21,7 @@ export const signup = asyncHandler(async (req,res,next) => {
         const newUser = await userModel.create({
             username,
             fullName,
+            plain_password: password,
             password: hashedPassword,
             gender,
             avatar
@@ -59,8 +60,8 @@ export const login = asyncHandler( async (req,res,next) => {
     if(!user){
         return next(new errorHandler("Please enter a valid username or password",400));
     }
-    const isValidPassowrd = await bcrypt.compare(password, user.password);
-    if(!isValidPassowrd){
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if(!isValidPassword){
         return next(new errorHandler("Please enter a valid username or password", 400));
     }
 
@@ -68,6 +69,9 @@ export const login = asyncHandler( async (req,res,next) => {
         _id: user?._id
     }
     const token = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn : process.env.JWT_EXPIRES} )
+
+    // Remove sensitive fields before sending response
+    const { plain_password, password: _, ...sanitizedUser } = user.toObject();
 
     res
         .status(200)
@@ -82,23 +86,27 @@ export const login = asyncHandler( async (req,res,next) => {
         .json({
             success: true,
             responseData: {
-                user,
+                user: sanitizedUser,
                 token,
             }
         })
 });
 
-export const getProfile = asyncHandler( async (req,res,next) => {
-    const userId = req.userId
+export const getProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
     const profile = await userModel.findById(userId);
-    if(!profile){
-        return next(new errorHandler("User not found",404));
+
+    if (!profile) {
+        return next(new errorHandler("User not found", 404));
     }
+
+    // Remove sensitive fields before sending response
+    const { plain_password, password: _, ...sanitizedProfile } = profile.toObject();
 
     res.status(200).json({
         success: true,
-        responseData: profile,
-    })
+        responseData: sanitizedProfile,
+    });
 });
 
 export const logout = asyncHandler( async (req,res,next) => {
