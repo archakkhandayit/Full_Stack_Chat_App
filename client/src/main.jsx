@@ -12,6 +12,7 @@ import Signup from "./pages/authentication/Signup.jsx";
 import Signup2 from "./pages/authentication/Signup2.jsx";
 import ProtectedRoutes from "./components/ProtectedRoutes.jsx";
 import UnprotectedRoutes from "./components/UnprotectedRoutes.jsx";
+import Error from "./pages/error/Error.jsx";
 
 const router = createBrowserRouter([
   {
@@ -40,7 +41,7 @@ const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: "ERROR | PAGE NOT FOUND",
+    element: <Error />,
   },
   {
     path: "/signup2",
