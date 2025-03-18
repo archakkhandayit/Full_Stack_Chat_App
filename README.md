@@ -1,4 +1,12 @@
 # Full-Stack_Chat_App
+#### [Project Link](https://full-stack-chat-app-fawn.vercel.app/)
+
+## Application Server Deployed Here 👇
+#### [Server](https://full-stack-chat-app-steel.vercel.app/)
+
+
+
+
 
 ## TODO:
  - Infinite scroll pagination for other users // infinite-react-scroll
