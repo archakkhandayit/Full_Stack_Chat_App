@@ -40,7 +40,7 @@ export const signup = asyncHandler(async (req,res,next) => {
                 ),
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "none", 
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
             })
             .json({
                 success: true,
@@ -81,7 +81,7 @@ export const login = asyncHandler( async (req,res,next) => {
             ),
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none", 
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
         })
         .json({
             success: true,
