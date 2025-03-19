@@ -14,8 +14,6 @@ export const socketSlice = createSlice({
       const socket = io(import.meta.env.VITE_SERVER_SOCKET_URL, {
         query: { userId: action.payload },
         withCredentials: true, // ✅ Important for CORS/auth
-        transports: ["websocket"], // Force WebSocket transport
-        reconnection: false, // Disable reconnection
       });
       state.socket = socket;
     },
