@@ -67,3 +67,40 @@ export const getMessages = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
+
+export const pollMessages = asyncHandler(async (req, res, next) => {
+  const myId = req.userId;
+  const otherParticipantId = req.params.otherParticipantId;
+  const { timestamp } = req.query;
+
+  if (!myId || !otherParticipantId || !timestamp) {
+    return next(new errorHandler("All fields are required", 400));
+  }
+
+  const conversation = await conversationModel
+    .findOne({
+      participants: { $all: [myId, otherParticipantId] },
+    })
+    .populate({
+      path: "messages",
+      match: { updatedAt: { $gt: new Date(timestamp) } }, // Filter messages by updatedAt
+    })
+    .lean();
+
+  if (!conversation) {
+    return res.status(200).json({
+      success: true,
+      responseData: {
+        newMessages: [],
+      },
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    responseData: {
+      newMessages: conversation.messages,
+    },
+  });
+});

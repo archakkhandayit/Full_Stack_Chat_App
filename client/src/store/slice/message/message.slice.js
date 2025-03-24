@@ -1,6 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-import { sendMessageThunk, getMessageThunk } from "./message.thunk";
+import {
+  sendMessageThunk,
+  getMessageThunk,
+  pollMessagesThunk,
+} from "./message.thunk";
+
 const initialState = {
   screenLoading: true,
   buttonLoading: false,
@@ -50,6 +55,35 @@ export const messageSlice = createSlice({
       builder.addCase(getMessageThunk.rejected, (state, action) => {
         state.buttonLoading = false;
         state.messages = null;
+      });
+    }
+
+    // Poll Messages
+    {
+      builder.addCase(pollMessagesThunk.fulfilled, (state, action) => {
+        const newMessages = action?.payload?.responseData?.newMessages;
+        const userProfile = action?.payload?.userProfile;
+
+        // Add debugging logs
+        console.log("New Messages:", newMessages);
+        console.log("UserProfile:", userProfile);
+
+        if (newMessages?.length > 0) {
+          // add to state only if userProfile._id !== receiverId
+
+          // Create a Set of existing message IDs
+          const existingMessageIds = new Set(state.messages.map((m) => m._id));
+
+          // Filtering duplicats and checking receiverId
+          const uniqueNewMessages = newMessages.filter((message) => {
+            const isDuplicate = existingMessageIds.has(message._id);
+            const isForCurrentUser = message?.receiverId === userProfile?._id;
+
+            return !isDuplicate && isForCurrentUser;
+          });
+
+          state.messages = [...state.messages, ...uniqueNewMessages];
+        }
       });
     }
   },

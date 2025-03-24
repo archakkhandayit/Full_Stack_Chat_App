@@ -32,3 +32,27 @@ export const getMessageThunk = createAsyncThunk(
     }
   }
 });
+
+export const pollMessagesThunk = createAsyncThunk(
+  "message/poll",
+  async ({ receiverId, timestamp }, { rejectWithValue,getState }) => {
+    try {
+      const response = await axiosInstance.get(
+        `/message/poll-messages/${receiverId}?timestamp=${timestamp}`
+      );
+
+      // Access userProfile from the state
+      const userProfile = getState().userReducer.userProfile;
+
+      return {
+        ...response?.data,
+        userProfile
+      };
+    } catch (e) {
+      if (e.code === "ECONNABORTED") {
+        return rejectWithValue("Request timed out");
+      } else {
+        return rejectWithValue(e?.response?.data?.errMessage);
+      }
+    }
+  });

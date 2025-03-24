@@ -1,27 +1,76 @@
 import Message from "./Message";
 import User from "./User";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { getMessageThunk } from "../../store/slice/message/message.thunk";
+import { useEffect, useState } from "react";
+import {
+  getMessageThunk,
+  pollMessagesThunk,
+} from "../../store/slice/message/message.thunk";
 import SendMessage from "./SendMessage";
 
 function MessageContainer() {
   const dispatch = useDispatch();
 
-  const { selectedUser } = useSelector(state => state.userReducer);
-  const {messages} = useSelector(state => state.messageReducer);
+  const [lastTimestamp, setLastTimestamp] = useState(
+    "1970-01-01T00:00:00.000Z"
+  );
+  const [isPolling, setIsPolling] = useState(true);
+
+  const { selectedUser } = useSelector((state) => state.userReducer);
+  const { messages } = useSelector((state) => state.messageReducer);
+
   useEffect(() => {
     if (selectedUser?._id) {
-      dispatch(getMessageThunk({ receiverId: selectedUser?._id }));
+      dispatch(getMessageThunk({ receiverId: selectedUser?._id })).then(
+        (response) => {
+          const latestMessage =
+            response?.payload?.responseData?.conversation?.messages?.slice(
+              -1
+            )[0];
+          if (latestMessage?.updatedAt) {
+            setLastTimestamp(latestMessage.updatedAt);
+          }
+        }
+      );
+    } else {
+      setIsPolling(false); // Stop polling when no user is selected
     }
   }, [selectedUser]);
 
+  //Short Polling for new Messages
+  useEffect(() => {
+    if (!selectedUser?._id || !isPolling) return;
+
+    const interval = setInterval(async () => {
+      const response = await dispatch(
+        pollMessagesThunk({
+          receiverId: selectedUser?._id,
+          timestamp: lastTimestamp,
+        })
+      );
+
+      if (response?.payload?.responseData?.newMessages?.length > 0) {
+        const newMessages = response.payload.responseData.newMessages;
+        const latestTimestamp = newMessages[newMessages.length - 1].updatedAt;
+        setLastTimestamp(latestTimestamp); // Update to the latest updatedAt
+      }
+    }, 10000); // Poll every 10 seconds
+
+    return () => {
+      clearInterval(interval); // Cleanup on unmount
+    };
+  }, [selectedUser, lastTimestamp, isPolling, dispatch]);
+
+  // Clear polling on unmount and ensure it
+  useEffect(() => {
+    return () => setIsPolling(false);
+  }, []);
   return (
     <>
       {!selectedUser ? (
         <div className="w-full flex items-center justify-center flex-col  gap-5">
           <h2 className="text-3xl">Welcome</h2>
-          <p className="text-xl">please select a user</p> 
+          <p className="text-xl">please select a user</p>
         </div>
       ) : (
         <div className="h-screen w-full flex flex-col">
@@ -29,9 +78,14 @@ function MessageContainer() {
             <User user={selectedUser} />
           </div>
           <div className="h-full overflow-y-auto p-3">
-            {messages?.map(messageDetails => <Message key={messageDetails?._id} messageDetails={messageDetails} />)}
+            {messages?.map((messageDetails) => (
+              <Message
+                key={messageDetails?._id}
+                messageDetails={messageDetails}
+              />
+            ))}
           </div>
-          <SendMessage/>
+          <SendMessage />
         </div>
       )}
     </>
