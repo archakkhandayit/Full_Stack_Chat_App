@@ -65,9 +65,6 @@ export const messageSlice = createSlice({
         const userProfile = action?.payload?.userProfile;
 
         // Add debugging logs
-        console.log("New Messages:", newMessages);
-        console.log("UserProfile:", userProfile);
-
         if (newMessages?.length > 0) {
           // add to state only if userProfile._id !== receiverId
 

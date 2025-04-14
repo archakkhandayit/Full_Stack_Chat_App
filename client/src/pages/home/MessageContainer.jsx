@@ -14,11 +14,11 @@ function MessageContainer() {
   const [lastTimestamp, setLastTimestamp] = useState(
     "1970-01-01T00:00:00.000Z"
   );
-  const [isPolling, setIsPolling] = useState(true);
 
   const { selectedUser } = useSelector((state) => state.userReducer);
   const { messages } = useSelector((state) => state.messageReducer);
 
+  //First initial messages fetching
   useEffect(() => {
     if (selectedUser?._id) {
       dispatch(getMessageThunk({ receiverId: selectedUser?._id })).then(
@@ -32,14 +32,13 @@ function MessageContainer() {
           }
         }
       );
-    } else {
-      setIsPolling(false); // Stop polling when no user is selected
-    }
+    } 
+
   }, [selectedUser]);
 
   //Short Polling for new Messages
   useEffect(() => {
-    if (!selectedUser?._id || !isPolling) return;
+    if (!selectedUser?._id ) return;
 
     const interval = setInterval(async () => {
       const response = await dispatch(
@@ -59,12 +58,9 @@ function MessageContainer() {
     return () => {
       clearInterval(interval); // Cleanup on unmount
     };
-  }, [selectedUser, lastTimestamp, isPolling, dispatch]);
+  }, [selectedUser, lastTimestamp,  dispatch]);
 
-  // Clear polling on unmount and ensure it
-  useEffect(() => {
-    return () => setIsPolling(false);
-  }, []);
+
   return (
     <>
       {!selectedUser ? (

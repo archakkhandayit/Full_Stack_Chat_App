@@ -5,8 +5,8 @@ function User({ user }) {
   const dispatch = useDispatch();
 
   const { selectedUser } = useSelector((state) => state.userReducer);
-  const { onlineUsers } = useSelector((state) => state.socketReducer);
-  const isUserOnline = onlineUsers?.includes(user?._id);
+  // const { onlineUsers } = useSelector((state) => state.socketReducer);
+  // const isUserOnline = onlineUsers?.includes(user?._id) || null;
   const handleUserClick = () => {
     dispatch(setSelectedUser(user));
   };
@@ -18,7 +18,8 @@ function User({ user }) {
         ${user?._id === selectedUser?._id && "bg-gray-700"}
         `}
     >
-      <div className={`avatar ${isUserOnline && 'avatar-online'}`}>
+      <div className={`avatar`}>
+      {/* <div className={`avatar ${isUserOnline && 'avatar-online'}`}> */}
         <div className="w-12 rounded-full">
           <img src={user?.avatar} />
         </div>

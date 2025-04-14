@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../../utilities/axiosInstance";
 
 import { deleteMessages } from "../message/message.slice.js"
-import { clearSocketState } from '../socket/socket.js'
+// import { clearSocketState } from '../socket/socket.js'
 
 
 export const loginUserThunk = createAsyncThunk(
@@ -49,7 +49,7 @@ export const logoutUserThunk = createAsyncThunk(
     try {
         const response = await axiosInstance.post("/user/logout");
         dispatch(deleteMessages());
-      dispatch(clearSocketState());
+      // dispatch(clearSocketState());
         return response?.data;
     } catch (e) {
         if (e.code === 'ECONNABORTED') {
