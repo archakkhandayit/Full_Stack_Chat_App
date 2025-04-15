@@ -81,7 +81,7 @@ function MessageContainer() {
               <div className="flex justify-center items-center h-full">
               <div className="mx-auto text-2xl text-center">Loading Messages...</div>
               </div>
-            ) : messages?.length === 0 ? (
+            ) : messages?.length === 0 || messages === null ? (
               <div className="flex justify-center items-center h-full">
               <div className="text-center text-2xl">Say "Hi 👋"!</div>
               </div>
