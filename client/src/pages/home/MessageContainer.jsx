@@ -6,6 +6,7 @@ import {
   getMessageThunk,
   pollMessagesThunk,
 } from "../../store/slice/message/message.thunk";
+import { setScreenLoading } from '../../store/slice/message/message.slice'
 import SendMessage from "./SendMessage";
 
 function MessageContainer() {
@@ -16,13 +17,17 @@ function MessageContainer() {
   );
 
   const { selectedUser } = useSelector((state) => state.userReducer);
-  const { messages } = useSelector((state) => state.messageReducer);
+  const { messages, screenLoading } = useSelector(
+    (state) => state.messageReducer
+  );
 
   //First initial messages fetching
   useEffect(() => {
     if (selectedUser?._id) {
+      dispatch(setScreenLoading(true));
       dispatch(getMessageThunk({ receiverId: selectedUser?._id })).then(
         (response) => {
+          dispatch(setScreenLoading(false));
           const latestMessage =
             response?.payload?.responseData?.conversation?.messages?.slice(
               -1
@@ -32,13 +37,12 @@ function MessageContainer() {
           }
         }
       );
-    } 
-
+    }
   }, [selectedUser]);
 
   //Short Polling for new Messages
   useEffect(() => {
-    if (!selectedUser?._id ) return;
+    if (!selectedUser?._id) return;
 
     const interval = setInterval(async () => {
       const response = await dispatch(
@@ -58,8 +62,7 @@ function MessageContainer() {
     return () => {
       clearInterval(interval); // Cleanup on unmount
     };
-  }, [selectedUser, lastTimestamp,  dispatch]);
-
+  }, [selectedUser, lastTimestamp, dispatch]);
 
   return (
     <>
@@ -74,12 +77,22 @@ function MessageContainer() {
             <User user={selectedUser} />
           </div>
           <div className="h-full overflow-y-auto p-3">
-            {messages?.map((messageDetails) => (
-              <Message
-                key={messageDetails?._id}
-                messageDetails={messageDetails}
-              />
-            ))}
+            {screenLoading ? (
+              <div className="flex justify-center items-center h-full">
+              <div className="mx-auto text-2xl text-center">Loading Messages...</div>
+              </div>
+            ) : messages?.length === 0 ? (
+              <div className="flex justify-center items-center h-full">
+              <div className="text-center text-2xl">Say "Hi 👋"!</div>
+              </div>
+            ) : (
+              messages?.map((messageDetails) => (
+                <Message
+                  key={messageDetails?._id}
+                  messageDetails={messageDetails}
+                />
+              ))
+            )}
           </div>
           <SendMessage />
         </div>

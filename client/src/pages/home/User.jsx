@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from "../../store/slice/user/user.slice";
+import { deleteMessages } from '../../store/slice/message/message.slice'
 
 function User({ user }) {
   const dispatch = useDispatch();
@@ -9,6 +10,7 @@ function User({ user }) {
   // const isUserOnline = onlineUsers?.includes(user?._id) || null;
   const handleUserClick = () => {
     dispatch(setSelectedUser(user));
+    dispatch(deleteMessages());
   };
 
   return (

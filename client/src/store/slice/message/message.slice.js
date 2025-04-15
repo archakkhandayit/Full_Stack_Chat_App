@@ -20,7 +20,10 @@ export const messageSlice = createSlice({
       state.messages = [...state.messages, action.payload];
     },
     deleteMessages: (state, action) => {
-      state.messages = null;
+      state.messages = [];
+    },
+    setScreenLoading: (state, action) => {
+      state.screenLoading = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -37,6 +40,7 @@ export const messageSlice = createSlice({
           ...state.messages,
           action.payload?.responseData?.newMessage,
         ];
+        state.screenLoading = false;
       });
       builder.addCase(sendMessageThunk.rejected, (state, action) => {
         state.buttonLoading = false;
@@ -50,11 +54,12 @@ export const messageSlice = createSlice({
       });
       builder.addCase(getMessageThunk.fulfilled, (state, action) => {
         state.messages = action?.payload?.responseData?.conversation?.messages;
+        state.screenLoading = false
         state.buttonLoading = false;
       });
       builder.addCase(getMessageThunk.rejected, (state, action) => {
         state.buttonLoading = false;
-        state.messages = null;
+        state.messages = [];
       });
     }
 
@@ -87,6 +92,6 @@ export const messageSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { setNewMessage, deleteMessages } = messageSlice.actions;
+export const { setNewMessage, deleteMessages, setScreenLoading } = messageSlice.actions;
 
 export default messageSlice.reducer;

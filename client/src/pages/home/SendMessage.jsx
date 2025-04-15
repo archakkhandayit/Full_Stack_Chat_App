@@ -2,6 +2,7 @@ import { useState } from "react";
 import { IoSend } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { sendMessageThunk } from "../../store/slice/message/message.thunk";
+import {setScreenLoading} from '../../store/slice/message/message.slice'
 
 const SendMessage = () => {
   const dispatch = useDispatch();
@@ -13,8 +14,9 @@ const SendMessage = () => {
         receiverId: selectedUser?._id,
         message,
       })
-    );
+    )
     setMessage('')
+    dispatch(setScreenLoading(false))
   };
   return (
     <div className="w-full p-3 flex gap-2">
