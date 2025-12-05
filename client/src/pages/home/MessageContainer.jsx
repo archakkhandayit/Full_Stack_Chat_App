@@ -57,7 +57,7 @@ function MessageContainer() {
         const latestTimestamp = newMessages[newMessages.length - 1].updatedAt;
         setLastTimestamp(latestTimestamp); // Update to the latest updatedAt
       }
-    }, 10000); // Poll every 10 seconds
+    }, 5000); // Poll every 10 seconds
 
     return () => {
       clearInterval(interval); // Cleanup on unmount
