@@ -1,18 +1,17 @@
 import mongoose from "mongoose";
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
       required: true,
+      trim: true,
     },
     username: {
       type: String,
       required: true,
       unique: true,
-    },
-    plain_password: {
-      type: String,
-      required: true,
+      trim: true,
     },
     password: {
       type: String,
@@ -28,7 +27,6 @@ const userSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-); //timestamp gives two properties createdAt & updatedAt in the document itself
+);
 
-
-export default mongoose.model("User", userSchema)
+export default mongoose.model("User", userSchema);
