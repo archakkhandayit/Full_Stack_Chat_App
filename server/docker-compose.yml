@@ -1,0 +1,14 @@
+services:
+  chatly-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatly-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3005"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+

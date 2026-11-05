@@ -1,0 +1,134 @@
+name: Build, Publish to GHCR & Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "server/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Image to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=true
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS via SSH
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy container to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: GITHUB_ACTOR,GITHUB_TOKEN,IMAGE_NAME,REGISTRY
+          script: |
+            set -e
+            echo "🚀 Starting automated deployment on VPS..."
+
+            # Ensure system paths & Docker binaries are in PATH
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+            # Source NVM if present on VPS (supports user, root, and system installations)
+            export NVM_DIR="$HOME/.nvm"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              \. "$NVM_DIR/nvm.sh"
+            elif [ -s "/root/.nvm/nvm.sh" ]; then
+              export NVM_DIR="/root/.nvm"
+              \. "$NVM_DIR/nvm.sh"
+            elif [ -s "/usr/local/nvm/nvm.sh" ]; then
+              export NVM_DIR="/usr/local/nvm"
+              \. "$NVM_DIR/nvm.sh"
+            fi
+
+            # Optionally switch to project Node version if nvm is active
+            if command -v nvm >/dev/null 2>&1; then
+              nvm use 20 >/dev/null 2>&1 || nvm use default >/dev/null 2>&1 || true
+            fi
+
+            # Authenticate with GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Locate project in the 'projects' directory on VPS
+            TARGET_DIR=""
+            for dir in "$HOME/projects/Full_Stack_Chat_App/server" \
+                       "$HOME/projects/chat-app/server" \
+                       "$HOME/projects/chatly/server" \
+                       "/root/projects/Full_Stack_Chat_App/server" \
+                       "/root/projects/chat-app/server" \
+                       "/projects/Full_Stack_Chat_App/server" \
+                       "/projects/chat-app/server"; do
+              if [ -d "$dir" ]; then
+                TARGET_DIR="$dir"
+                break
+              fi
+            done
+
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR="$HOME/projects/Full_Stack_Chat_App/server"
+              mkdir -p "$TARGET_DIR"
+            fi
+
+            echo "📂 Deploying in: $TARGET_DIR"
+            cd "$TARGET_DIR"
+
+            # Pull the latest image from GHCR
+            docker compose -f docker-compose.prod.yml pull
+
+            # Recreate containers with new image
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Clean up old images to conserve disk space
+            docker image prune -f
+
+            echo "✅ Deployment completed successfully!"

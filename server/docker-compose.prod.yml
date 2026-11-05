@@ -1,0 +1,12 @@
+services:
+  chatly-backend:
+    image: ghcr.io/archakkhandayit/full_stack_chat_app:latest
+    container_name: chatly-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+
