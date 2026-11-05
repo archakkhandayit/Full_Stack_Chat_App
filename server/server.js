@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.status(200).json("App is running");
+  res.status(200).json("App is running successfully");
 });
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/message", messageRouter);
